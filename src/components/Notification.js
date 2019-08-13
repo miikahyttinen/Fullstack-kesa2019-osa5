@@ -10,7 +10,7 @@ const Notification = ({ message }) => {
 }
 
 Notification.propTypes = {
-  message: PropTypes.string.isRequired
+  message: PropTypes.string
 }
 
 export default Notification

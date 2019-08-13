@@ -6,6 +6,7 @@ import Notification from './components/Notification'
 import ErrorMessage from './components/ErrorMessage'
 import LoginForm from './components/LoginForm'
 import BlogForm from './components/BlogForm'
+import { useField } from './hooks'
 import './App.css'
 
 const App = () => {
@@ -15,8 +16,8 @@ const App = () => {
   const [newBlogUrl, setNewBlogUrl] = useState('')
   const [errorMessage, setErrorMessage] = useState(null)
   const [successMessage, setSuccessMessage] = useState(null)
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const username = useField('text')
+  const password = useField('password')
   const [user, setUser] = useState(null)
   const [loginVisible, setLoginVisible] = useState(false)
   const [blogFormVisible, setBlogFormVisible] = useState(false)
@@ -38,16 +39,18 @@ const App = () => {
 
   const handleLogin = async event => {
     event.preventDefault()
+    const usernameLogin = username.value
+    const passwordLogin = password.value
     try {
       const user = await loginService.login({
-        username,
-        password
+        usernameLogin,
+        passwordLogin
       })
 
       window.localStorage.setItem('loggedBlogAppUser', JSON.stringify(user))
       setUser(user)
-      setUsername('')
-      setPassword('')
+      username.reset()
+      password.reset()
       blogService.setToken(user.token)
     } catch (exception) {
       setErrorMessage('wrong credentials')
@@ -92,6 +95,7 @@ const App = () => {
   const handleLogout = event => {
     event.preventDefault()
     window.localStorage.removeItem('loggedBlogAppUser')
+    setUser(null)
     setSuccessMessage('You have logged out')
     setTimeout(() => {
       setSuccessMessage(null)
@@ -113,10 +117,10 @@ const App = () => {
         <div style={showWhenVisible}>
           <LoginForm
             handleLogin={handleLogin}
-            username={username}
-            password={password}
-            handleUsernameChange={({ target }) => setUsername(target.value)}
-            handlePasswordChange={({ target }) => setPassword(target.value)}
+            username={username.value}
+            password={password.value}
+            handleUsernameChange={username.onChange}
+            handlePasswordChange={password.onChange}
           />
           <button onClick={() => setLoginVisible(false)}>cancel</button>
         </div>
