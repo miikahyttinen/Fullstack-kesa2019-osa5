@@ -46,8 +46,6 @@ const deleteOne = async blog => {
     const request = axios.delete(`${baseUrl}/${blog.id}`, config)
     const response = await request
     return response.data
-
-    console.log('RESPONSE DELETE ONE --->', response.data)
   } else {
     return
   }

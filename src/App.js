@@ -13,7 +13,6 @@ const App = () => {
   const [newBlogTitle, setNewBlogTitle] = useState('')
   const [newBlogAuthor, setNewBlogAuthor] = useState('')
   const [newBlogUrl, setNewBlogUrl] = useState('')
-  const [showAll, setShowAll] = useState(true)
   const [errorMessage, setErrorMessage] = useState(null)
   const [successMessage, setSuccessMessage] = useState(null)
   const [username, setUsername] = useState('')
@@ -91,6 +90,7 @@ const App = () => {
   }
 
   const handleLogout = event => {
+    event.preventDefault()
     window.localStorage.removeItem('loggedBlogAppUser')
     setSuccessMessage('You have logged out')
     setTimeout(() => {
@@ -105,6 +105,8 @@ const App = () => {
     return (
       <div>
         <h1>Welcome to bloglist!</h1>
+        <Notification message={successMessage} />
+        <ErrorMessage message={errorMessage} />
         <div style={hideWhenVisible}>
           <button onClick={() => setLoginVisible(true)}>log in</button>
         </div>
