@@ -1,39 +1,63 @@
 import React, { useState, useEffect } from 'react'
 import loginService from './services/login'
-import blogService from './services/blogs'
+import blogsService from './services/blogsService'
 import Blog from './components/Blog'
 import Notification from './components/Notification'
-import ErrorMessage from './components/ErrorMessage'
 import LoginForm from './components/LoginForm'
 import BlogForm from './components/BlogForm'
+import { connect } from 'react-redux'
 import { useField } from './hooks'
 import './App.css'
+import { createNotification } from './reducers/notificationReducer'
+import { initializeBlogs, createBlog } from './reducers/blogsReducer'
+import userService from './services/userService'
+import Users from './components/Users'
+import styled from 'styled-components'
 
-const App = () => {
-  const [blogs, setBlogs] = useState([])
+const Page = styled.div`
+  padding: 1em;
+  background: LightYellow;
+  text-align: center;
+`
+
+const Button = styled.button`
+  background: Aquamarine;
+  font-size: 1em;
+  margin: 1em;
+  padding: 0.25em 1em;
+  border: 3px solid DeepPink;
+  border-radius: 3px;
+`
+
+const App = props => {
   const [newBlogTitle, setNewBlogTitle] = useState('')
   const [newBlogAuthor, setNewBlogAuthor] = useState('')
   const [newBlogUrl, setNewBlogUrl] = useState('')
-  const [errorMessage, setErrorMessage] = useState(null)
-  const [successMessage, setSuccessMessage] = useState(null)
   const username = useField('text')
   const password = useField('password')
   const [user, setUser] = useState(null)
   const [loginVisible, setLoginVisible] = useState(false)
   const [blogFormVisible, setBlogFormVisible] = useState(false)
+  const [users, setUsers] = useState('')
 
   useEffect(() => {
-    blogService.getAll().then(initialBlogs => {
-      setBlogs(initialBlogs.sort((a, b) => b.likes - a.likes))
-    })
+    userService.getAll().then(res => setUsers(res))
   }, [])
+
+  useEffect(() => {
+    props.initializeBlogs()
+  }, [])
+
+  const sendNotificationToStore = (messageType, message) => {
+    props.createNotification({ messageType: messageType, message: message })
+  }
 
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
-      blogService.setToken(user.token)
+      blogsService.setToken(user.token)
     }
   }, [])
 
@@ -51,11 +75,11 @@ const App = () => {
       setUser(user)
       username.reset()
       password.reset()
-      blogService.setToken(user.token)
+      blogsService.setToken(user.token)
     } catch (exception) {
-      setErrorMessage('wrong credentials')
+      sendNotificationToStore('error', 'wrong credentials')
       setTimeout(() => {
-        setErrorMessage(null)
+        sendNotificationToStore('initial', '')
       }, 5000)
     }
   }
@@ -64,9 +88,9 @@ const App = () => {
     event.preventDefault()
 
     if (newBlogTitle === '' || newBlogAuthor === '' || newBlogUrl === '') {
-      setErrorMessage('Fill all fields to add a new blog')
+      sendNotificationToStore('error', 'Fill all fields to add a new blog')
       setTimeout(() => {
-        setErrorMessage(null)
+        sendNotificationToStore('initial', '')
       }, 5000)
       return
     }
@@ -77,17 +101,17 @@ const App = () => {
       url: newBlogUrl
     }
     try {
-      await blogService.create(blogToBeAdded)
-      setSuccessMessage(`New blog ${newBlogTitle} added`)
+      props.createBlog(blogToBeAdded)
+      sendNotificationToStore('success', `New blog ${newBlogTitle} added`)
       setNewBlogTitle('')
       setNewBlogAuthor('')
       setNewBlogUrl('')
       setTimeout(() => {
-        setSuccessMessage(null)
+        sendNotificationToStore('initial', '')
       }, 5000)
     } catch (exception) {
       setTimeout(() => {
-        setErrorMessage('Some error happened')
+        sendNotificationToStore('error', 'Some error happened')
       }, 5000)
     }
   }
@@ -96,10 +120,14 @@ const App = () => {
     event.preventDefault()
     window.localStorage.removeItem('loggedBlogAppUser')
     setUser(null)
-    setSuccessMessage('You have logged out')
+    sendNotificationToStore('success', 'You have logged out')
     setTimeout(() => {
-      setSuccessMessage(null)
+      sendNotificationToStore('initial', '')
     }, 5000)
+  }
+
+  const userList = () => {
+    return <Users users={users} blogs={props.blogs} />
   }
 
   const loginForm = () => {
@@ -107,24 +135,25 @@ const App = () => {
     const showWhenVisible = { display: loginVisible ? '' : 'none' }
 
     return (
-      <div>
-        <h1>Welcome to bloglist!</h1>
-        <Notification message={successMessage} />
-        <ErrorMessage message={errorMessage} />
-        <div style={hideWhenVisible}>
-          <button onClick={() => setLoginVisible(true)}>log in</button>
+      <Page>
+        <div>
+          <h1>Welcome to bloglist!</h1>
+          <Notification />
+          <div style={hideWhenVisible}>
+            <Button onClick={() => setLoginVisible(true)}>log in</Button>
+          </div>
+          <div style={showWhenVisible}>
+            <LoginForm
+              handleLogin={handleLogin}
+              username={username.value}
+              password={password.value}
+              handleUsernameChange={username.onChange}
+              handlePasswordChange={password.onChange}
+            />
+            <Button onClick={() => setLoginVisible(false)}>cancel</Button>
+          </div>
         </div>
-        <div style={showWhenVisible}>
-          <LoginForm
-            handleLogin={handleLogin}
-            username={username.value}
-            password={password.value}
-            handleUsernameChange={username.onChange}
-            handlePasswordChange={password.onChange}
-          />
-          <button onClick={() => setLoginVisible(false)}>cancel</button>
-        </div>
-      </div>
+      </Page>
     )
   }
 
@@ -133,25 +162,28 @@ const App = () => {
     const showWhenVisible = { display: blogFormVisible ? '' : 'none' }
 
     return (
-      <div>
+      <Page>
         <form onSubmit={handleLogout}>
-          <button type='submit'>LOGOUT</button>
+          <Button type='submit'>LOGOUT</Button>
         </form>
         <h2>Blogs</h2>
-        <Notification message={successMessage} />
-        <ErrorMessage message={errorMessage} />
+        <Notification />
         <br />
         <p> {user.name} is logged in </p>
-        {blogs.map(blog => (
-          <Blog key={blog.id} blog={blog} class='blog' />
-        ))}
+        <div>
+          {props.blogs
+            .sort((a, b) => b.likes - a.likes)
+            .map((blog, index) => (
+              <Blog key={index} blog={blog} class='blog' />
+            ))}
+        </div>
         <div style={hideWhenVisible}>
-          <button onClick={() => setBlogFormVisible(true)}>ADD BLOG</button>
+          <Button onClick={() => setBlogFormVisible(true)}>ADD BLOG</Button>
         </div>
         <div style={showWhenVisible}>
           <BlogForm
             user={user}
-            blogs={blogs}
+            blogs={props.blogs}
             addBlog={addBlog}
             newBlogTitle={newBlogTitle}
             handleNewBlogTitleChange={({ target }) =>
@@ -164,9 +196,10 @@ const App = () => {
             newBlogUrl={newBlogUrl}
             handleNewBlogUrlChange={({ target }) => setNewBlogUrl(target.value)}
           />
-          <button onClick={() => setBlogFormVisible(false)}>cancel</button>
+          <Button onClick={() => setBlogFormVisible(false)}>cancel</Button>
         </div>
-      </div>
+        <div>{userList()}</div>
+      </Page>
     )
   }
 
@@ -177,4 +210,14 @@ const App = () => {
   }
 }
 
-export default App
+const mapStateToProps = state => {
+  return {
+    notification: state.notification,
+    blogs: state.blogs
+  }
+}
+
+export default connect(
+  mapStateToProps,
+  { initializeBlogs, createBlog, createNotification }
+)(App)

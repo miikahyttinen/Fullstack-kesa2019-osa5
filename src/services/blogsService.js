@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { request } from 'https'
 const baseUrl = '/api/blogs'
 
 let token = null
@@ -22,6 +23,12 @@ const getAll = async () => {
   return response.data
 }
 
+const getOne = async id => {
+  const request = axios.get(`${baseUrl}/${id}`)
+  const respone = await request
+  return respone.data
+}
+
 const likeOne = async blog => {
   const blogNewLike = {
     user: blog.user.id,
@@ -40,7 +47,7 @@ const deleteOne = async blog => {
     headers: { Authorization: token }
   }
   const result = window.confirm(
-    `Are you sure tahat you want to delte blog "${blog.name}"`
+    `Are you sure you want to delete blog "${blog.name}"`
   )
   if (result === true) {
     const request = axios.delete(`${baseUrl}/${blog.id}`, config)
@@ -51,4 +58,4 @@ const deleteOne = async blog => {
   }
 }
 
-export default { getAll, setToken, create, likeOne, deleteOne }
+export default { getAll, setToken, create, likeOne, deleteOne, getOne }

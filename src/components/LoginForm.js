@@ -1,5 +1,15 @@
 import React from 'react'
 import PropTypes from 'prop-types'
+import styled from 'styled-components'
+
+const Button = styled.button`
+  background: Aquamarine;
+  font-size: 1em;
+  margin: 1em;
+  padding: 0.25em 1em;
+  border: 3px solid DeepPink;
+  border-radius: 3px;
+`
 
 const LoginForm = ({
   handleLogin,
@@ -29,7 +39,7 @@ const LoginForm = ({
           onChange={handlePasswordChange}
         />
       </div>
-      <button type='submit'>login</button>
+      <Button type='submit'>login</Button>
     </form>
   </div>
 )

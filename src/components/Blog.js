@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import blogService from '../services/blogs'
+import blogsService from '../services/blogsService'
+import styled from 'styled-components'
 
 const Blog = ({ blog }) => {
   const [blogInfoVisible, setBlogInfoVisible] = useState(false)
@@ -7,13 +8,22 @@ const Blog = ({ blog }) => {
   const showWhenVisible = { display: blogInfoVisible ? '' : 'none' }
   const hideWhenVisible = { display: blogInfoVisible ? 'none' : '' }
 
+  const Button = styled.button`
+    background: Aquamarine;
+    font-size: 1em;
+    margin: 1em;
+    padding: 0.25em 1em;
+    border: 3px solid DeepPink;
+    border-radius: 3px;
+  `
+
   return (
     <div className='blog-content'>
       <div>
         {blog.title} {blog.author}{' '}
         <div style={hideWhenVisible}>
-          <button onClick={() => setBlogInfoVisible(true)}>Show info</button>
-          <button onClick={() => blogService.likeOne(blog)}>Like</button>
+          <Button onClick={() => setBlogInfoVisible(true)}>Show info</Button>
+          <Button onClick={() => blogsService.likeOne(blog)}>Like</Button>
         </div>
       </div>
       <div style={showWhenVisible}>
@@ -25,14 +35,14 @@ const Blog = ({ blog }) => {
         <br />
         Added by: {blog.user.name}
         <br />
-        <button onClick={() => setBlogInfoVisible(false)}>Close info</button>
-        <button onClick={() => blogService.likeOne(blog)}>Like</button>
-        <button
-          className='delete-button'
-          onClick={() => blogService.deleteOne(blog)}
+        <Button onClick={() => setBlogInfoVisible(false)}>Close info</Button>
+        <Button onClick={() => blogsService.likeOne(blog)}>Like</Button>
+        <Button
+          className='delete-Button'
+          onClick={() => blogsService.deleteOne(blog)}
         >
           Delete
-        </button>
+        </Button>
       </div>
     </div>
   )

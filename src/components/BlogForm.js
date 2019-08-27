@@ -1,4 +1,14 @@
 import React from 'react'
+import styled from 'styled-components'
+
+const Page = styled.div`
+  padding: 1em;
+  background: papayawhip;
+`
+
+const Form = styled.form`
+  margin: 0 auto;
+`
 
 const BlogForm = ({
   addBlog,
@@ -9,9 +19,9 @@ const BlogForm = ({
   newBlogUrl,
   handleNewBlogUrlChange
 }) => (
-  <div>
+  <Page>
     <br />
-    <form onSubmit={addBlog}>
+    <Form onSubmit={addBlog}>
       Title:
       <input value={newBlogTitle} onChange={handleNewBlogTitleChange} /> <br />
       Author:
@@ -21,8 +31,8 @@ const BlogForm = ({
       <input value={newBlogUrl} onChange={handleNewBlogUrlChange} />
       <br />
       <button type='submit'>Save</button>
-    </form>
-  </div>
+    </Form>
+  </Page>
 )
 
 export default BlogForm
